@@ -36,11 +36,19 @@ interface IKeyVaultAccessConfig {
 
 export const init = (configFilePath: string, keyVaultAccessConfig: IKeyVaultAccessConfig) => {
   const { clientId, clientSecret, keyIdentifier } = keyVaultAccessConfig;
-
   const keyVault = new KeyVault(clientId, clientSecret, keyIdentifier);
 
   const data = fs.readFileSync(configFilePath);
   config = JSON.parse(data.toString());
+
+  decryptObject(keyVault.decrypt, config);
+};
+
+export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: IKeyVaultAccessConfig) => {
+  config = configContent;
+
+  const { clientId, clientSecret, keyIdentifier } = keyVaultAccessConfig;
+  const keyVault = new KeyVault(clientId, clientSecret, keyIdentifier);
 
   decryptObject(keyVault.decrypt, config);
 };
