@@ -23,6 +23,8 @@ function decryptObject(decrypt: CryptFunction, obj: any): void {
         const promise = decrypt(obj[k]);
         semaphors.push(makeQuerablePromise(promise));
 
+        log('akec: KeyVault - promise:', promise);
+
         promise
           .then((val: string) => {
             obj[k.substring(0, k.length - POSTFIX_ENCRYPTED.length)] = val;
