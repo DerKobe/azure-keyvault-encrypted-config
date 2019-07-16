@@ -1,1 +1,1 @@
-export type Logger = (msg: any[]) => void;
+export type Logger = (...msg: any[]) => void;
