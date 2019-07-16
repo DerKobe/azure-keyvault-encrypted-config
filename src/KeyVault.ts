@@ -61,11 +61,8 @@ export class KeyVault {
   private call(method: 'encrypt' | 'decrypt', payload: string): Promise<KeyOperationResult> {
     const buffer = Buffer.from(payload, method === 'decrypt' ? 'base64' : 'utf-8');
 
-    return this.client[method](this.vaultBaseUri, this.keyName, this.keyVersion, this.algorithm, buffer)
-      .then(({ result }) => (result as Buffer).toString(method === 'decrypt' ? 'utf-8' : 'base64'))
-      .catch(error => {
-        // tslint:disable-next-line:no-console
-        console.error(error);
-      });
+    const promise = this.client[method](this.vaultBaseUri, this.keyName, this.keyVersion, this.algorithm, buffer);
+
+    return promise.then(({ result }) => (result as Buffer).toString(method === 'decrypt' ? 'utf-8' : 'base64'));
   }
 }
