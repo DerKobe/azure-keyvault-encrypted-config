@@ -1,6 +1,6 @@
 import * as fs from 'fs';
-import { makeQuerablePromise, QuerablePromise } from './QuerablePromise';
 import { CryptFunction, KeyVault } from './KeyVault';
+import { makeQuerablePromise, QuerablePromise } from './QuerablePromise';
 
 const POSTFIX_ENCRYPTED = '-Encrypted';
 const POSTFIX_BASE64 = '-Base64';

@@ -1,6 +1,6 @@
 {
   "name": "azure-keyvault-encrypted-config",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Keep a json config file in your project which can contain encrypted secrets which will be decrypted via Azure KeyVault Key.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
