@@ -23,17 +23,12 @@ function decryptObject(decrypt: CryptFunction, obj: any): void {
         const promise = decrypt(obj[k]);
         semaphors.push(makeQuerablePromise(promise));
 
-        log('akec: KeyVault - promise:', promise);
-
         promise
           .then((val: string) => {
             obj[k.substring(0, k.length - POSTFIX_ENCRYPTED.length)] = val;
             delete obj[k];
             log(`akec: "${k}" decryption finished`);
           })
-          .catch((reason: any) => {
-            log('akec: (decryption error)', reason);
-          });
 
       } else if (k.endsWith(POSTFIX_BASE64)) {
         log(`akec: "${k}" needs to be decoded`);
