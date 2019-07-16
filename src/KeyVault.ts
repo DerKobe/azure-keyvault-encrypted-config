@@ -1,6 +1,7 @@
 import { AcquireTokenCallback, AuthenticationContext } from 'adal-node';
 // @ts-ignore
 import keyVaultClient, { KeyOperationResult, KeyVaultClient, KeyVaultCredentials } from 'azure-keyvault';
+export type Logger = (msg: any[]) => void;
 
 export type CryptFunction = (payload: string) => Promise<KeyOperationResult>;
 
@@ -13,6 +14,8 @@ export class KeyVault {
   private readonly algorithm: string = 'RSA-OAEP';
   private readonly clientId: string;
   private readonly clientSecret: string;
+
+  private logger: Logger = console.log;
 
   constructor(clientId: string, clientSecret: string, keyIdentifier: string, algorithm?: string) {
     const match = keyIdentifier.match(new RegExp('(https://.+)/keys/(.+)/(.+)')) as string[];
@@ -54,6 +57,10 @@ export class KeyVault {
     this.client = new KeyVaultClient(credentials);
   }
 
+  public setLogger(logger: Logger): void {
+    this.logger = logger;
+  }
+
   public encrypt = (payload: string): Promise<string> => this.call('encrypt', payload);
 
   public decrypt = (payload: string): Promise<string> => this.call('decrypt', payload);
@@ -61,8 +68,13 @@ export class KeyVault {
   private call(method: 'encrypt' | 'decrypt', payload: string): Promise<KeyOperationResult> {
     const buffer = Buffer.from(payload, method === 'decrypt' ? 'base64' : 'utf-8');
 
-    const promise = this.client[method](this.vaultBaseUri, this.keyName, this.keyVersion, this.algorithm, buffer);
-
-    return promise.then(({ result }) => (result as Buffer).toString(method === 'decrypt' ? 'utf-8' : 'base64'));
+    return (
+      this.client[method](this.vaultBaseUri, this.keyName, this.keyVersion, this.algorithm, buffer)
+        .then(({ result }) => (result as Buffer).toString(method === 'decrypt' ? 'utf-8' : 'base64'))
+        .catch(e => {
+          this.logger(e);
+          throw e;
+        })
+    );
   }
 }

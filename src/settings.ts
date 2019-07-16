@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import { CryptFunction, KeyVault } from './KeyVault';
 import { makeQuerablePromise, QuerablePromise } from './QuerablePromise';
+import { Logger } from "./types";
 
 const POSTFIX_ENCRYPTED = '-Encrypted';
 const POSTFIX_BASE64 = '-Base64';
@@ -39,8 +40,6 @@ interface KeyVaultAccessConfig {
   clientSecret: string;
   keyIdentifier: string;
 }
-
-type Logger = (msg: any[]) => void;
 
 export const init = (configFilePath: string, keyVaultAccessConfig: KeyVaultAccessConfig, customLogger?: Logger) => {
   const data = fs.readFileSync(configFilePath);
