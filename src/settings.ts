@@ -56,7 +56,7 @@ export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: 
 
   const { clientId, clientSecret, keyIdentifier } = keyVaultAccessConfig;
   const keyVault = new KeyVault(clientId, clientSecret, keyIdentifier);
-  KeyVault.setLogger(customLogger);
+  if (customLogger) { keyVault.setLogger(customLogger); }
 
   decryptObject(keyVault.decrypt, config);
 };
