@@ -15,7 +15,8 @@ export class KeyVault {
   private readonly clientId: string;
   private readonly clientSecret: string;
 
-  private logger: Logger = console.log;
+  private logger?: Logger;
+  private storedLogMessages: any[] = [];
 
   constructor(clientId: string, clientSecret: string, keyIdentifier: string, algorithm?: string) {
     const match = keyIdentifier.match(new RegExp('(https://.+)/keys/(.+)/(.+)')) as string[];
@@ -59,11 +60,22 @@ export class KeyVault {
 
   public setLogger(logger: Logger): void {
     this.logger = logger;
+
+    this.storedLogMessages.forEach(this.logger);
+    this.storedLogMessages = [];
   }
 
   public encrypt = (payload: string): Promise<string> => this.call('encrypt', payload);
 
   public decrypt = (payload: string): Promise<string> => this.call('decrypt', payload);
+
+  private log(...args: any[]): void {
+    if (this.logger) {
+      this.logger(...args)
+    } else {
+      this.storedLogMessages.push(args)
+    }
+  }
 
   private call(method: 'encrypt' | 'decrypt', payload: string): Promise<KeyOperationResult> {
     const buffer = Buffer.from(payload, method === 'decrypt' ? 'base64' : 'utf-8');
@@ -71,11 +83,11 @@ export class KeyVault {
     return (
       this.client[method](this.vaultBaseUri, this.keyName, this.keyVersion, this.algorithm, buffer)
         .then(({ result }) => {
-          this.logger(`akec: KeyVault ${method} successfull`);
+          this.log(`akec: KeyVault ${method} successfull`);
           return (result as Buffer).toString(method === 'decrypt' ? 'utf-8' : 'base64')
         })
         .catch(e => {
-          this.logger('akec: KeyVault (error)', e);
+          this.log('akec: KeyVault (error)', e);
           throw e;
         })
     );
