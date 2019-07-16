@@ -1,6 +1,7 @@
 import { AcquireTokenCallback, AuthenticationContext } from 'adal-node';
 // @ts-ignore
 import keyVaultClient, { KeyOperationResult, KeyVaultClient, KeyVaultCredentials } from 'azure-keyvault';
+
 export type Logger = (...msg: any[]) => void;
 
 export type CryptFunction = (payload: string) => Promise<KeyOperationResult>;

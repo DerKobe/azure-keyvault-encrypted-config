@@ -22,11 +22,17 @@ function decryptObject(decrypt: CryptFunction, obj: any): void {
         log(`akec: "${k}" needs to be decrypted`);
         const promise = decrypt(obj[k]);
         semaphors.push(makeQuerablePromise(promise));
-        promise.then((val: string) => {
-          obj[k.substring(0, k.length - POSTFIX_ENCRYPTED.length)] = val;
-          delete obj[k];
-          log(`akec: "${k}" decryption finished`);
-        });
+
+        promise
+          .then((val: string) => {
+            obj[k.substring(0, k.length - POSTFIX_ENCRYPTED.length)] = val;
+            delete obj[k];
+            log(`akec: "${k}" decryption finished`);
+          })
+          .catch((reason: any) => {
+            log('akec: (decryption error)', reason);
+          });
+
       } else if (k.endsWith(POSTFIX_BASE64)) {
         log(`akec: "${k}" needs to be decoded`);
         obj[k.substring(0, k.length - POSTFIX_BASE64.length)] = Buffer.from(obj[k], 'base64').toString();
@@ -82,7 +88,7 @@ function log(...args: any[]): void {
 }
 
 export const setLogger = (customLogger: Logger) => {
-  customLogger('akec: cutom logger set');
+  customLogger('akec: custom logger set');
   logger = customLogger;
   storedLogMessages.forEach(msg => customLogger(msg));
   storedLogMessages = [];
