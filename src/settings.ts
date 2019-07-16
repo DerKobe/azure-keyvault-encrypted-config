@@ -1,10 +1,11 @@
 import * as fs from 'fs';
+import { makeQuerablePromise, QuerablePromise } from './QuerablePromise';
 import { CryptFunction, KeyVault } from './KeyVault';
 
 const POSTFIX_ENCRYPTED = '-Encrypted';
 const POSTFIX_BASE64 = '-Base64';
 
-const semaphors: Array<Promise<void>> = [];
+const semaphors: Array<QuerablePromise<void>> = [];
 let config: any;
 let hasDecryptionFinished = false;
 let logger = console.log;
@@ -17,7 +18,7 @@ function decryptObject(decrypt: CryptFunction, obj: any): void {
       if (k.endsWith(POSTFIX_ENCRYPTED)) {
         logger(`akec: "${k}" needs to be decrypted`);
         const promise = decrypt(obj[k]);
-        semaphors.push(promise);
+        semaphors.push(makeQuerablePromise(promise));
         promise.then((val: string) => {
           obj[k.substring(0, k.length - POSTFIX_ENCRYPTED.length)] = val;
           delete obj[k];
@@ -33,7 +34,7 @@ function decryptObject(decrypt: CryptFunction, obj: any): void {
   }
 }
 
-interface IKeyVaultAccessConfig {
+interface KeyVaultAccessConfig {
   clientId: string;
   clientSecret: string;
   keyIdentifier: string;
@@ -41,14 +42,14 @@ interface IKeyVaultAccessConfig {
 
 type Logger = (msg: any[]) => void;
 
-export const init = (configFilePath: string, keyVaultAccessConfig: IKeyVaultAccessConfig, customLogger?: Logger) => {
+export const init = (configFilePath: string, keyVaultAccessConfig: KeyVaultAccessConfig, customLogger?: Logger) => {
   const data = fs.readFileSync(configFilePath);
   config = JSON.parse(data.toString());
 
   initWithConfigContent(config, keyVaultAccessConfig, logger)
 };
 
-export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: IKeyVaultAccessConfig, customLogger?: Logger) => {
+export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: KeyVaultAccessConfig, customLogger?: Logger) => {
   config = configContent;
   if (customLogger) {
     setLogger(customLogger);
@@ -61,6 +62,9 @@ export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: 
 };
 
 export const getConfig = async () => {
+  const semaphorsState = semaphors.map(s => s.isResolved());
+  logger('akec: getConfig -> semaphors state', semaphorsState);
+
   if (!hasDecryptionFinished) {
     await Promise.all(semaphors).then(() => {
       hasDecryptionFinished = true;
