@@ -51,7 +51,7 @@ export const init = (configFilePath: string, keyVaultAccessConfig: IKeyVaultAcce
 export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: IKeyVaultAccessConfig, customLogger?: Logger) => {
   config = configContent;
   if (customLogger) {
-    logger = customLogger;
+    setLogger(customLogger);
   }
 
   const { clientId, clientSecret, keyIdentifier } = keyVaultAccessConfig;
@@ -68,4 +68,8 @@ export const getConfig = async () => {
   }
 
   return config;
+};
+
+export const setLogger = (customLogger: Logger) => {
+  logger = customLogger;
 };
