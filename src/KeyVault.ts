@@ -1,7 +1,7 @@
 import { AcquireTokenCallback, AuthenticationContext } from 'adal-node';
 // @ts-ignore
 import keyVaultClient, { KeyOperationResult, KeyVaultClient, KeyVaultCredentials } from 'azure-keyvault';
-export type Logger = (msg: any[]) => void;
+export type Logger = (...msg: any[]) => void;
 
 export type CryptFunction = (payload: string) => Promise<KeyOperationResult>;
 
@@ -70,9 +70,12 @@ export class KeyVault {
 
     return (
       this.client[method](this.vaultBaseUri, this.keyName, this.keyVersion, this.algorithm, buffer)
-        .then(({ result }) => (result as Buffer).toString(method === 'decrypt' ? 'utf-8' : 'base64'))
+        .then(({ result }) => {
+          this.logger(`akec: KeyVault ${method} successfull`);
+          return (result as Buffer).toString(method === 'decrypt' ? 'utf-8' : 'base64')
+        })
         .catch(e => {
-          this.logger(e);
+          this.logger('akec: KeyVault (error)', e);
           throw e;
         })
     );
