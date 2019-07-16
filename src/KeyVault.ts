@@ -62,7 +62,7 @@ export class KeyVault {
     this.logger = logger;
 
     logger(`akec: KeyVault - There are ${this.storedLogMessages.length} stored log messages.`);
-    this.storedLogMessages.forEach(logger);
+    this.storedLogMessages.forEach(msg => logger(msg));
     this.storedLogMessages = [];
   }
 

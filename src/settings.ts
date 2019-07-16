@@ -64,10 +64,9 @@ export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: 
 };
 
 export const getConfig = async () => {
-  const openSemaphors = semaphors.map(s => s.isResolved()).reduce((count, isResolved) => count + (isResolved ? 0 : 1), 0);
-  log(`akec: getConfig -> open semaphors ${openSemaphors}/${semaphors.length}`);
-
   if (!hasDecryptionFinished) {
+    const openSemaphors = semaphors.map(s => s.isResolved()).reduce((count, isResolved) => count + (isResolved ? 0 : 1), 0);
+    log(`akec: getConfig -> open semaphors ${openSemaphors}/${semaphors.length}`);
     await Promise.all(semaphors).then(() => { hasDecryptionFinished = true; });
   }
 
@@ -85,6 +84,6 @@ function log(...args: any[]): void {
 export const setLogger = (customLogger: Logger) => {
   customLogger('akec: cutom logger set');
   logger = customLogger;
-  storedLogMessages.forEach(customLogger);
+  storedLogMessages.forEach(msg => customLogger(msg));
   storedLogMessages = [];
 };
