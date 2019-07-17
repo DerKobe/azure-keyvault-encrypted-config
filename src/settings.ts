@@ -5,6 +5,7 @@ import { Logger } from "./types";
 
 const POSTFIX_ENCRYPTED = '-Encrypted';
 const POSTFIX_BASE64 = '-Base64';
+const STORED_MESSAGES_MAX_LENGTH = 200;
 
 const semaphors: Array<QuerablePromise<void>> = [];
 let config: any;
@@ -81,6 +82,9 @@ function log(...args: any[]): void {
     logger(...args)
   } else {
     storedLogMessages.push(args);
+    if (storedLogMessages.length > STORED_MESSAGES_MAX_LENGTH) {
+      storedLogMessages.shift();
+    }
   }
 }
 

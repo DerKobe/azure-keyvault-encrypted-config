@@ -2,6 +2,8 @@ import { AcquireTokenCallback, AuthenticationContext } from 'adal-node';
 // @ts-ignore
 import keyVaultClient, { KeyOperationResult, KeyVaultClient, KeyVaultCredentials } from 'azure-keyvault';
 
+const STORED_MESSAGES_MAX_LENGTH = 200;
+
 export type Logger = (...msg: any[]) => void;
 
 export type CryptFunction = (payload: string) => Promise<KeyOperationResult>;
@@ -73,9 +75,12 @@ export class KeyVault {
 
   private log(...args: any[]): void {
     if (this.logger) {
-      this.logger(...args)
+      this.logger(...args);
     } else {
-      this.storedLogMessages.push(args)
+      this.storedLogMessages.push(args);
+      if (this.storedLogMessages.length > STORED_MESSAGES_MAX_LENGTH) {
+        this.storedLogMessages.shift();
+      }
     }
   }
 
