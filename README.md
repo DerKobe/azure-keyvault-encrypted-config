@@ -43,7 +43,12 @@ const clientId = "667a8299-abf7-4ae5-b156-21afde093219";
 const clientSecret = "f@+lQ6Dr&hWcSEuKkyTF_s/M2q234A9P5";
 const keyIdentifier = "https://myazurekeyvault.vault.azure.net/keys/MyKeyName/2914862ab06b4c8dfe42ad095e0a4ed9";
 
+// use either with the path to config ...
 init('./config.json', { clientId, clientSecret, keyIdentifier });
+
+// ... or directly with the config content as an object
+const configContent = require(`./config.local.json`);
+initWithConfigContent(configContent, { clientId, clientSecret, keyIdentifier });
 
 getConfig().then((config) => {
   // use decrypted config here
