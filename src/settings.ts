@@ -21,10 +21,8 @@ function decryptObject(decrypt: CryptFunction, obj: any): void {
     } else {
       if (k.endsWith(POSTFIX_ENCRYPTED)) {
         log(`akec: "${k}" needs to be decrypted`);
-        const promise = decrypt(obj[k]);
-        semaphors.push(makeQuerablePromise(promise));
-
-        promise
+        const promise = (
+          decrypt(obj[k])
           .then((val: string) => {
             obj[k.substring(0, k.length - POSTFIX_ENCRYPTED.length)] = val;
             delete obj[k];
@@ -35,6 +33,8 @@ function decryptObject(decrypt: CryptFunction, obj: any): void {
             delete obj[k];
             log(`akec: "${k}" decryption failed: ${error.toString()}`);
           })
+        );
+        semaphors.push(makeQuerablePromise(promise));
 
       } else if (k.endsWith(POSTFIX_BASE64)) {
         log(`akec: "${k}" needs to be decoded`);
