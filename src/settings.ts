@@ -30,6 +30,11 @@ function decryptObject(decrypt: CryptFunction, obj: any): void {
             delete obj[k];
             log(`akec: "${k}" decryption finished`);
           })
+          .catch((error: any) => {
+            obj[k.substring(0, k.length - POSTFIX_ENCRYPTED.length)] = `Decryption failed: ${error.toString()}`;
+            delete obj[k];
+            log(`akec: "${k}" decryption failed: ${error.toString()}`);
+          })
 
       } else if (k.endsWith(POSTFIX_BASE64)) {
         log(`akec: "${k}" needs to be decoded`);
