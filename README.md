@@ -14,11 +14,11 @@ yarn add git+https://git@github.com/DerKobe/azure-keyvault-encrypted-config.git
 
 If you want to use the provided command line tools anywhere you can install the package globally with
 ```bash
-npm i -g git+https://git@github.com/DerKobe/azure-keyvault-encrypted-config.git
+sudo npm i -g git+https://git@github.com/DerKobe/azure-keyvault-encrypted-config.git
 ```
 or
 ```bash
-yarn global add git+https://git@github.com/DerKobe/azure-keyvault-encrypted-config.git
+sudo yarn global add git+https://git@github.com/DerKobe/azure-keyvault-encrypted-config.git
 ```
 
 
