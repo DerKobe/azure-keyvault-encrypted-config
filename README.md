@@ -3,10 +3,24 @@
 ### Get started
 
 ##### 1. Install Package
-Add this line to your dependencies in your package.json
-```json
-"azure-keyvault-encrypted-config": "git+https://git@github.com/DerKobe/azure-keyvault-encrypted-config.git", 
+Add the package to your project with
+```bash
+npm i --save git+https://git@github.com/DerKobe/azure-keyvault-encrypted-config.git
 ```
+or
+```bash
+yarn add git+https://git@github.com/DerKobe/azure-keyvault-encrypted-config.git
+```
+
+If you want to use the provided command line tools anywhere you can install the package globally with
+```bash
+npm i -g git+https://git@github.com/DerKobe/azure-keyvault-encrypted-config.git
+```
+or
+```bash
+yarn global add git+https://git@github.com/DerKobe/azure-keyvault-encrypted-config.git
+```
+
 
 ##### 2. Create Config File
 Creat a json file which contains your config and mark keys which contain encrypted data with a `-Encrypted` postfix.
