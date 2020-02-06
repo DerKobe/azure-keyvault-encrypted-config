@@ -11,7 +11,7 @@ const semaphors: Array<QuerablePromise<void>> = [];
 let config: any;
 let hasDecryptionFinished = false;
 
-let logger: Logger = console.log;
+let logger: Logger;
 let storedLogMessages: any[] = [];
 
 function decryptObject(decrypt: CryptFunction, obj: any): void {
