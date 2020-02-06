@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import { CryptFunction, KeyVault } from './KeyVault';
 import { makeQuerablePromise, QuerablePromise } from './QuerablePromise';
-import { Logger } from "./types";
+import { ExceptionLogger, Logger } from "./types";
 
 const POSTFIX_ENCRYPTED = '-Encrypted';
 const POSTFIX_BASE64 = '-Base64';
@@ -11,7 +11,7 @@ const semaphors: Array<QuerablePromise<void>> = [];
 let config: any;
 let hasDecryptionFinished = false;
 
-let logger: Logger | undefined;
+let logger: Logger = console.log;
 let storedLogMessages: any[] = [];
 
 function decryptObject(decrypt: CryptFunction, obj: any): void {
@@ -23,16 +23,16 @@ function decryptObject(decrypt: CryptFunction, obj: any): void {
         log(`akec: "${k}" needs to be decrypted`);
         const promise = (
           decrypt(obj[k])
-          .then((val: string) => {
-            obj[k.substring(0, k.length - POSTFIX_ENCRYPTED.length)] = val;
-            delete obj[k];
-            log(`akec: "${k}" decryption finished`);
-          })
-          .catch((error: any) => {
-            obj[k.substring(0, k.length - POSTFIX_ENCRYPTED.length)] = `Decryption failed: ${error.toString()}`;
-            delete obj[k];
-            log(`akec: "${k}" decryption failed: ${error.toString()}`);
-          })
+            .then((val: string) => {
+              obj[k.substring(0, k.length - POSTFIX_ENCRYPTED.length)] = val;
+              delete obj[k];
+              log(`akec: "${k}" decryption finished`);
+            })
+            .catch((error: any) => {
+              obj[k.substring(0, k.length - POSTFIX_ENCRYPTED.length)] = `Decryption failed: ${error.toString()}`;
+              delete obj[k];
+              log(`akec: "${k}" decryption failed: ${error.toString()}`);
+            })
         );
         semaphors.push(makeQuerablePromise(promise));
 
@@ -52,14 +52,14 @@ interface KeyVaultAccessConfig {
   keyIdentifier: string;
 }
 
-export const init = (configFilePath: string, keyVaultAccessConfig: KeyVaultAccessConfig, customLogger?: Logger) => {
+export const init = (configFilePath: string, keyVaultAccessConfig: KeyVaultAccessConfig, customLogger?: Logger, exceptionLogger?: ExceptionLogger) => {
   const data = fs.readFileSync(configFilePath);
   config = JSON.parse(data.toString());
 
-  initWithConfigContent(config, keyVaultAccessConfig, logger)
+  initWithConfigContent(config, keyVaultAccessConfig, customLogger, exceptionLogger)
 };
 
-export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: KeyVaultAccessConfig, customLogger?: Logger) => {
+export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: KeyVaultAccessConfig, customLogger?: Logger, exceptionLogger?: ExceptionLogger) => {
   config = configContent;
   if (customLogger) {
     setLogger(customLogger);
@@ -69,7 +69,21 @@ export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: 
   const keyVault = new KeyVault(clientId, clientSecret, keyIdentifier);
   if (customLogger) { keyVault.setLogger(customLogger); }
 
-  decryptObject(keyVault.decrypt, config);
+  const decrypt: CryptFunction = async (encryptedValue: string): Promise<string> => {
+    let decryptedValue = '';
+    try {
+      decryptedValue = await keyVault.decrypt(encryptedValue);
+     } catch (exception) {
+      if (exceptionLogger) {
+        exceptionLogger(exception);
+      } else {
+        throw exception;
+      }
+    }
+    return decryptedValue;
+  };
+
+  decryptObject(decrypt, config);
 };
 
 export const getConfig = async () => {
