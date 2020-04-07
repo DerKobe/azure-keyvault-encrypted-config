@@ -1,64 +1,37 @@
-import { AcquireTokenCallback, AuthenticationContext } from 'adal-node';
-// @ts-ignore
-import keyVaultClient, { KeyOperationResult, KeyVaultClient, KeyVaultCredentials } from 'azure-keyvault';
+import { ClientSecretCredential } from "@azure/identity";
+import { CryptographyClient, EncryptionAlgorithm, KeyClient, KeyVaultKey } from "@azure/keyvault-keys";
+import { Logger } from './types'
 
 const STORED_MESSAGES_MAX_LENGTH = 200;
 
-export type Logger = (...msg: any[]) => void;
-
-export type CryptFunction = (payload: string) => Promise<KeyOperationResult>;
-
 export class KeyVault {
-  public readonly client: keyVaultClient;
-
+  public readonly keysClient: KeyClient;
   private readonly vaultBaseUri: string;
   private readonly keyName: string;
   private readonly keyVersion: string;
-  private readonly algorithm: string = 'RSA-OAEP';
+  private readonly algorithm: EncryptionAlgorithm = 'RSA-OAEP-256';
+  private readonly tenant: string;
   private readonly clientId: string;
   private readonly clientSecret: string;
+  private readonly credentials: ClientSecretCredential;
 
+  private key: KeyVaultKey | undefined;
+  private cryptographyClientInstance: CryptographyClient | undefined;
   private logger?: Logger;
   private storedLogMessages: any[] = [];
 
-  constructor(clientId: string, clientSecret: string, keyIdentifier: string, algorithm?: string) {
+  constructor(tenant: string, clientId: string, clientSecret: string, keyIdentifier: string, algorithm?: EncryptionAlgorithm) {
     const match = keyIdentifier.match(new RegExp('(https://.+)/keys/(.+)/(.+)')) as string[];
 
+    this.tenant = tenant;
     this.vaultBaseUri = match[1];
     this.keyName = match[2];
     this.keyVersion = match[3];
     this.algorithm = algorithm || this.algorithm;
     this.clientId = clientId;
     this.clientSecret = clientSecret;
-
-    // Authenticator - retrieves the access token
-    const authenticator = (
-      challenge: any,
-      callback: (error: Error | null, callback: string) => AcquireTokenCallback,
-    ): any => {
-      // Create a new authentication context.
-      const context = new AuthenticationContext(challenge.authorization);
-
-      // Use the context to acquire an authentication token.
-      return context.acquireTokenWithClientCredentials(
-        challenge.resource,
-        clientId,
-        clientSecret,
-        (err: Error, tokenResponse: any): AcquireTokenCallback => {
-          if (err) {
-            throw err;
-          }
-
-          // Calculate the value to be set in the request's Authorization header and resume the call.
-          const authorizationValue = `${tokenResponse.tokenType} ${tokenResponse.accessToken}`;
-
-          return callback(null, authorizationValue);
-        },
-      );
-    };
-
-    const credentials = new KeyVaultCredentials(authenticator);
-    this.client = new KeyVaultClient(credentials);
+    this.credentials = new ClientSecretCredential(this.tenant, this.clientId, this.clientSecret);
+    this.keysClient = new KeyClient(this.vaultBaseUri, this.credentials);
   }
 
   public setLogger(logger: Logger): void {
@@ -84,11 +57,13 @@ export class KeyVault {
     }
   }
 
-  private call(method: 'encrypt' | 'decrypt', payload: string): Promise<KeyOperationResult> {
+  private async call(method: 'encrypt' | 'decrypt', payload: string): Promise<string> {
     const buffer = Buffer.from(payload, method === 'decrypt' ? 'base64' : 'utf-8');
 
+    const cryptographyClient = await this.getCryptographyClient();
+
     return (
-      this.client[method](this.vaultBaseUri, this.keyName, this.keyVersion, this.algorithm, buffer)
+      cryptographyClient[method](this.algorithm, buffer)
         .then(({ result }) => {
           this.log(`akec: KeyVault ${method} successfull`);
           return (result as Buffer).toString(method === 'decrypt' ? 'utf-8' : 'base64')
@@ -98,5 +73,14 @@ export class KeyVault {
           throw e;
         })
     );
+  }
+
+  private async getCryptographyClient(): Promise<CryptographyClient> {
+    if (!this.cryptographyClientInstance) {
+      this.key = await this.keysClient.getKey(this.keyName, { version: this.keyVersion });
+      this.cryptographyClientInstance = new CryptographyClient(this.key, this.credentials);
+    }
+
+    return this.cryptographyClientInstance;
   }
 }

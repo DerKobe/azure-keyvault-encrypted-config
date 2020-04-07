@@ -1,6 +1,7 @@
 import * as fs from 'fs';
-import { CryptFunction, KeyVault } from './KeyVault';
+import { KeyVault } from './KeyVault';
 import { makeQuerablePromise, QuerablePromise } from './QuerablePromise';
+import { CryptFunction } from './types'
 import { ExceptionLogger, Logger } from "./types";
 
 const POSTFIX_ENCRYPTED = '-Encrypted';
@@ -47,6 +48,7 @@ function decryptObject(decrypt: CryptFunction, obj: any): void {
 }
 
 interface KeyVaultAccessConfig {
+  tenant: string;
   clientId: string;
   clientSecret: string;
   keyIdentifier: string;
@@ -65,15 +67,17 @@ export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: 
     setLogger(customLogger);
   }
 
-  const { clientId, clientSecret, keyIdentifier } = keyVaultAccessConfig;
-  const keyVault = new KeyVault(clientId, clientSecret, keyIdentifier);
-  if (customLogger) { keyVault.setLogger(customLogger); }
+  const { tenant, clientId, clientSecret, keyIdentifier } = keyVaultAccessConfig;
+  const keyVault = new KeyVault(tenant, clientId, clientSecret, keyIdentifier);
+  if (customLogger) {
+    keyVault.setLogger(customLogger);
+  }
 
   const decrypt: CryptFunction = async (encryptedValue: string): Promise<string> => {
     let decryptedValue = '';
     try {
       decryptedValue = await keyVault.decrypt(encryptedValue);
-     } catch (exception) {
+    } catch (exception) {
       if (exceptionLogger) {
         exceptionLogger(exception);
       } else {
@@ -90,7 +94,9 @@ export const getConfig = async () => {
   if (!hasDecryptionFinished) {
     const openSemaphors = semaphors.map(s => s.isResolved()).reduce((count, isResolved) => count + (isResolved ? 0 : 1), 0);
     log(`akec: getConfig -> open semaphors ${openSemaphors}/${semaphors.length}`);
-    await Promise.all(semaphors).then(() => { hasDecryptionFinished = true; });
+    await Promise.all(semaphors).then(() => {
+      hasDecryptionFinished = true;
+    });
   }
 
   return config;

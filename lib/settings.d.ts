@@ -1,5 +1,6 @@
 import { ExceptionLogger, Logger } from "./types";
 interface KeyVaultAccessConfig {
+    tenant: string;
     clientId: string;
     clientSecret: string;
     keyIdentifier: string;
