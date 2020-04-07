@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import { KeyVault } from './KeyVault';
 import { makeQuerablePromise, QuerablePromise } from './QuerablePromise';
 import { CryptFunction } from './types'
-import { ExceptionLogger, Logger } from "./types";
+import { DecryptionError, ExceptionLogger, Logger } from "./types";
 
 const POSTFIX_ENCRYPTED = '-Encrypted';
 const POSTFIX_BASE64 = '-Base64';
@@ -30,9 +30,7 @@ function decryptObject(decrypt: CryptFunction, obj: any): void {
               log(`akec: "${k}" decryption finished`);
             })
             .catch((error: any) => {
-              obj[k.substring(0, k.length - POSTFIX_ENCRYPTED.length)] = `Decryption failed: ${error.toString()}`;
-              delete obj[k];
-              log(`akec: "${k}" decryption failed: ${error.toString()}`);
+              throw new DecryptionError(`Decryption failed: ${error.toString()} for ${k}`);
             })
         );
         semaphors.push(makeQuerablePromise(promise));
