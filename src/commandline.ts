@@ -1,5 +1,6 @@
 #! /usr/bin/env node
 import { KeyVault } from './KeyVault';
+import { EncryptionAlgorithm } from "@azure/keyvault-keys";
 
 const method = process.argv[2];
 const payload = process.argv[3];
@@ -25,6 +26,7 @@ const keyVault = new KeyVault(
   process.env.KEY_VAULT_CLIENT_ID as string,
   process.env.KEY_VAULT_CLIENT_SECRET as string,
   process.env.KEY_VAULT_KEY_IDENTIFIER as string,
+  process.env.KEY_VAULT_ALGORITHM as EncryptionAlgorithm,
 );
 
 // @ts-ignore
