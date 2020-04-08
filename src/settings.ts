@@ -1,9 +1,8 @@
-import * as fs from 'fs';
+import { EncryptionAlgorithm } from "@azure/keyvault-keys";
 import { KeyVault } from './KeyVault';
 import { makeQuerablePromise, QuerablePromise } from './QuerablePromise';
 import { CryptFunction } from './types'
 import { DecryptionError, ExceptionLogger, Logger } from "./types";
-import { EncryptionAlgorithm } from "@azure/keyvault-keys";
 
 const POSTFIX_ENCRYPTED = '-Encrypted';
 const POSTFIX_BIG_ENCRYPTED = '-BigEncrypted';
@@ -67,10 +66,11 @@ interface KeyVaultAccessConfig {
   clientId: string;
   clientSecret: string;
   keyIdentifier: string;
+  algorithm?: EncryptionAlgorithm;
 }
 
-export const initKeyVault = (keyVaultAccessConfig: KeyVaultAccessConfig, algorithm?: EncryptionAlgorithm): KeyVault => {
-  const { tenant, clientId, clientSecret, keyIdentifier } = keyVaultAccessConfig;
+export const initKeyVault = (keyVaultAccessConfig: KeyVaultAccessConfig): KeyVault => {
+  const { tenant, clientId, clientSecret, keyIdentifier, algorithm } = keyVaultAccessConfig;
   return new KeyVault(tenant, clientId, clientSecret, keyIdentifier, algorithm);
 };
 
@@ -80,8 +80,8 @@ export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: 
     setLogger(customLogger);
   }
 
-  const { tenant, clientId, clientSecret, keyIdentifier } = keyVaultAccessConfig;
-  const keyVault = new KeyVault(tenant, clientId, clientSecret, keyIdentifier);
+  const { tenant, clientId, clientSecret, keyIdentifier, algorithm } = keyVaultAccessConfig;
+  const keyVault = new KeyVault(tenant, clientId, clientSecret, keyIdentifier, algorithm);
   if (customLogger) {
     keyVault.setLogger(customLogger);
   }
