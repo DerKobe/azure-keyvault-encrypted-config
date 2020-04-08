@@ -1,7 +1,9 @@
-import { EncryptionAlgorithm, KeyClient } from "@azure/keyvault-keys";
+import { EncryptionAlgorithm } from "@azure/keyvault-keys";
 import { Logger } from './types';
 export declare class KeyVault {
-    readonly keysClient: KeyClient;
+    private static localEncrypt;
+    private static localDecrypt;
+    private readonly keysClient;
     private readonly vaultBaseUri;
     private readonly keyName;
     private readonly keyVersion;
@@ -18,6 +20,8 @@ export declare class KeyVault {
     setLogger(logger: Logger): void;
     encrypt: (payload: string) => Promise<string>;
     decrypt: (payload: string) => Promise<string>;
+    encryptBig: (payload: string) => Promise<string>;
+    decryptBig: (payload: string) => Promise<string>;
     private log;
     private call;
     private getCryptographyClient;

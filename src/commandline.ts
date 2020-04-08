@@ -4,7 +4,7 @@ import { KeyVault } from './KeyVault';
 const method = process.argv[2];
 const payload = process.argv[3];
 
-if (!['encrypt', 'decrypt'].includes(method)) {
+if (!['encrypt', 'decrypt', 'encryptBig', 'decryptBig'].includes(method)) {
   console.log(`Unknown method ${method}.`);
   process.exit(1);
 }

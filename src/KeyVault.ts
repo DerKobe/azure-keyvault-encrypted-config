@@ -1,11 +1,28 @@
 import { ClientSecretCredential } from "@azure/identity";
 import { CryptographyClient, EncryptionAlgorithm, KeyClient, KeyVaultKey } from "@azure/keyvault-keys";
+import * as crypto from 'crypto';
 import { Logger } from './types'
 
 const STORED_MESSAGES_MAX_LENGTH = 200;
+const CRYPTO_ALGORITHM = 'aes-256-cbc';
 
 export class KeyVault {
-  public readonly keysClient: KeyClient;
+  private static localEncrypt(key: string, iv: string, payload: string): string {
+    const cipher = crypto.createCipheriv(CRYPTO_ALGORITHM, Buffer.from(key, 'base64'), Buffer.from(iv, 'base64'));
+    let encrypted = cipher.update(payload);
+    encrypted = Buffer.concat([encrypted, cipher.final()]);
+    return encrypted.toString('base64');
+  }
+
+  private static localDecrypt(key: string, iv: string, payload: string): string {
+    const encryptedText = Buffer.from(payload, 'base64');
+    const decipher = crypto.createDecipheriv(CRYPTO_ALGORITHM, Buffer.from(key, 'base64'), Buffer.from(iv, 'base64'));
+    let decrypted = decipher.update(encryptedText);
+    decrypted = Buffer.concat([decrypted, decipher.final()]);
+    return decrypted.toString('utf-8');
+  }
+
+  private readonly keysClient: KeyClient;
   private readonly vaultBaseUri: string;
   private readonly keyName: string;
   private readonly keyVersion: string;
@@ -14,7 +31,6 @@ export class KeyVault {
   private readonly clientId: string;
   private readonly clientSecret: string;
   private readonly credentials: ClientSecretCredential;
-
   private key: KeyVaultKey | undefined;
   private cryptographyClientInstance: CryptographyClient | undefined;
   private logger?: Logger;
@@ -45,6 +61,22 @@ export class KeyVault {
   public encrypt = (payload: string): Promise<string> => this.call('encrypt', payload);
 
   public decrypt = (payload: string): Promise<string> => this.call('decrypt', payload);
+
+  public encryptBig = async (payload: string): Promise<string> => {
+    const key = crypto.randomBytes(32).toString('base64');
+    const iv = crypto.randomBytes(16).toString('base64');
+
+    const encryptedSecret = await this.encrypt(`${key}~${iv}`);
+    const encryptedPayload = KeyVault.localEncrypt(key, iv, payload);
+
+    return `${encryptedSecret}|${encryptedPayload}`;
+  };
+
+  public decryptBig = async (payload: string): Promise<string> => {
+    const [encryptedSecret, encryptedPayload] = payload.split('|');
+    const [key, iv] = (await this.decrypt(encryptedSecret)).split('~');
+    return KeyVault.localDecrypt(key, iv, encryptedPayload);
+  };
 
   private log(...args: any[]): void {
     if (this.logger) {

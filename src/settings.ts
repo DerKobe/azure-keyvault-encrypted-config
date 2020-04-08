@@ -5,6 +5,7 @@ import { CryptFunction } from './types'
 import { DecryptionError, ExceptionLogger, Logger } from "./types";
 
 const POSTFIX_ENCRYPTED = '-Encrypted';
+const POSTFIX_BIG_ENCRYPTED = '-BigEncrypted';
 const POSTFIX_BASE64 = '-Base64';
 const STORED_MESSAGES_MAX_LENGTH = 200;
 
@@ -22,7 +23,7 @@ function decryptObject(decrypt: CryptFunction, obj: any): void {
     } else {
       if (k.endsWith(POSTFIX_ENCRYPTED)) {
         log(`akec: "${k}" needs to be decrypted`);
-        const promise = (
+        const promiseDecrypt = (
           decrypt(obj[k])
             .then((val: string) => {
               obj[k.substring(0, k.length - POSTFIX_ENCRYPTED.length)] = val;
@@ -33,7 +34,22 @@ function decryptObject(decrypt: CryptFunction, obj: any): void {
               throw new DecryptionError(`Decryption failed: ${error.toString()} for ${k}`);
             })
         );
-        semaphors.push(makeQuerablePromise(promise));
+        semaphors.push(makeQuerablePromise(promiseDecrypt));
+
+      } else if (k.endsWith(POSTFIX_BIG_ENCRYPTED)) {
+        log(`akec: "${k}" needs to be decrypted locally because big payload`);
+        const promiseDecryptBig = (
+          decrypt(obj[k], true)
+            .then((val: string) => {
+              obj[k.substring(0, k.length - POSTFIX_BIG_ENCRYPTED.length)] = val;
+              delete obj[k];
+              log(`akec: "${k}" decryption finished`);
+            })
+            .catch((error: any) => {
+              throw new DecryptionError(`Decryption failed: ${error.toString()} for ${k}`);
+            })
+        );
+        semaphors.push(makeQuerablePromise(promiseDecryptBig));
 
       } else if (k.endsWith(POSTFIX_BASE64)) {
         log(`akec: "${k}" needs to be decoded`);
@@ -71,10 +87,10 @@ export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: 
     keyVault.setLogger(customLogger);
   }
 
-  const decrypt: CryptFunction = async (encryptedValue: string): Promise<string> => {
+  const decrypt: CryptFunction = async (encryptedValue: string, big: boolean = false): Promise<string> => {
     let decryptedValue = '';
     try {
-      decryptedValue = await keyVault.decrypt(encryptedValue);
+      decryptedValue = await keyVault[big ? 'decryptBig' : 'decrypt'](encryptedValue);
     } catch (exception) {
       if (exceptionLogger) {
         exceptionLogger(exception);
