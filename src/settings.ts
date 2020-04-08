@@ -1,7 +1,6 @@
-import { EncryptionAlgorithm } from "@azure/keyvault-keys";
 import { KeyVault } from './KeyVault';
 import { makeQuerablePromise, QuerablePromise } from './QuerablePromise';
-import { CryptFunction } from './types'
+import { CryptFunction, KeyVaultAccessConfig } from './types'
 import { DecryptionError, ExceptionLogger, Logger } from "./types";
 
 const POSTFIX_ENCRYPTED = '-Encrypted';
@@ -59,14 +58,6 @@ function decryptObject(decrypt: CryptFunction, obj: any): void {
       }
     }
   }
-}
-
-interface KeyVaultAccessConfig {
-  tenant: string;
-  clientId: string;
-  clientSecret: string;
-  keyIdentifier: string;
-  algorithm?: EncryptionAlgorithm;
 }
 
 export const initKeyVault = (keyVaultAccessConfig: KeyVaultAccessConfig): KeyVault => {
