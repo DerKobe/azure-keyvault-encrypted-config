@@ -68,11 +68,9 @@ interface KeyVaultAccessConfig {
   keyIdentifier: string;
 }
 
-export const init = (configFilePath: string, keyVaultAccessConfig: KeyVaultAccessConfig, customLogger?: Logger, exceptionLogger?: ExceptionLogger) => {
-  const data = fs.readFileSync(configFilePath);
-  config = JSON.parse(data.toString());
-
-  initWithConfigContent(config, keyVaultAccessConfig, customLogger, exceptionLogger)
+export const initKeyVault = (keyVaultAccessConfig: KeyVaultAccessConfig): KeyVault => {
+  const { tenant, clientId, clientSecret, keyIdentifier } = keyVaultAccessConfig;
+  return new KeyVault(tenant, clientId, clientSecret, keyIdentifier);
 };
 
 export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: KeyVaultAccessConfig, customLogger?: Logger, exceptionLogger?: ExceptionLogger) => {
