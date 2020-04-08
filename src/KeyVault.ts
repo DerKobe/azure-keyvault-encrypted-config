@@ -26,7 +26,7 @@ export class KeyVault {
   private readonly vaultBaseUri: string;
   private readonly keyName: string;
   private readonly keyVersion: string;
-  private readonly algorithm: EncryptionAlgorithm = 'RSA-OAEP-256';
+  private readonly algorithm: EncryptionAlgorithm = 'RSA-OAEP';
   private readonly tenant: string;
   private readonly clientId: string;
   private readonly clientSecret: string;
