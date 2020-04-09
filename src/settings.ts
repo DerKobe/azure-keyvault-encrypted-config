@@ -66,7 +66,8 @@ export const initKeyVault = (keyVaultAccessConfig: KeyVaultAccessConfig): KeyVau
 };
 
 export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: KeyVaultAccessConfig, customLogger?: Logger, exceptionLogger?: ExceptionLogger) => {
-  if (configContent.indexOf(POSTFIX_ENCRYPTED) + configContent.indexOf(POSTFIX_BIG_ENCRYPTED) + configContent.indexOf(POSTFIX_BASE64) === -1) {
+  const stringifyed = JSON.stringify(configContent);
+  if (stringifyed.indexOf(POSTFIX_ENCRYPTED) + stringifyed.indexOf(POSTFIX_BIG_ENCRYPTED) + stringifyed.indexOf(POSTFIX_BASE64) === -1) {
     return configContent;
   }
 
