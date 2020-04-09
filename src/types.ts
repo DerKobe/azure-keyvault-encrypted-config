@@ -1,4 +1,5 @@
 import { EncryptionAlgorithm } from "@azure/keyvault-keys";
+export { EncryptionAlgorithm } from "@azure/keyvault-keys";
 
 export type Logger = (...msg: any[]) => void;
 export type ExceptionLogger = (excpetion: Error) => void;
