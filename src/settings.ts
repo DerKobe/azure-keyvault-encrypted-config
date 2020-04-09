@@ -66,13 +66,20 @@ export const initKeyVault = (keyVaultAccessConfig: KeyVaultAccessConfig): KeyVau
 };
 
 export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: KeyVaultAccessConfig, customLogger?: Logger, exceptionLogger?: ExceptionLogger) => {
+  if (configContent.indexOf(POSTFIX_ENCRYPTED) + configContent.indexOf(POSTFIX_BIG_ENCRYPTED) + configContent.indexOf(POSTFIX_BASE64) === -1) {
+    return configContent;
+  }
+
   config = configContent;
+
   if (customLogger) {
     setLogger(customLogger);
   }
 
   const { tenant, clientId, clientSecret, keyIdentifier, algorithm } = keyVaultAccessConfig;
+
   const keyVault = new KeyVault(tenant, clientId, clientSecret, keyIdentifier, algorithm);
+
   if (customLogger) {
     keyVault.setLogger(customLogger);
   }

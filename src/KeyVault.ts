@@ -37,6 +37,11 @@ export class KeyVault {
   private storedLogMessages: any[] = [];
 
   constructor(tenant: string, clientId: string, clientSecret: string, keyIdentifier: string, algorithm?: EncryptionAlgorithm) {
+    if (!tenant) { throw new Error('KeyVault: tenant is missing!'); }
+    if (!clientId) { throw new Error('KeyVault: clientId is missing!'); }
+    if (!clientSecret) { throw new Error('KeyVault: clientSecret is missing!'); }
+    if (!keyIdentifier) { throw new Error('KeyVault: keyIdentifier is missing!'); }
+
     const match = keyIdentifier.match(new RegExp('(https://.+)/keys/(.+)/(.+)')) as string[];
 
     this.tenant = tenant;

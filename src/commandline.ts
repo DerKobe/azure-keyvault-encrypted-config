@@ -14,20 +14,19 @@ if (!payload) {
   process.exit(2);
 }
 
-const keys = ['KEY_VAULT_TENANT', 'KEY_VAULT_CLIENT_ID', 'KEY_VAULT_CLIENT_SECRET', 'KEY_VAULT_KEY_IDENTIFIER'];
-const hasConfig = keys.reduce((acc: boolean, key: string) => acc && typeof process.env[key] !== 'undefined', true);
-if (!hasConfig) {
-  console.log(`KeyVault is not configured!`);
+let keyVault
+try {
+  keyVault = new KeyVault(
+    process.env.KEY_VAULT_TENANT as string,
+    process.env.KEY_VAULT_CLIENT_ID as string,
+    process.env.KEY_VAULT_CLIENT_SECRET as string,
+    process.env.KEY_VAULT_KEY_IDENTIFIER as string,
+    process.env.KEY_VAULT_ALGORITHM as EncryptionAlgorithm,
+  );
+} catch (e) {
+  console.error(e.message);
   process.exit(3);
 }
-
-const keyVault = new KeyVault(
-  process.env.KEY_VAULT_TENANT as string,
-  process.env.KEY_VAULT_CLIENT_ID as string,
-  process.env.KEY_VAULT_CLIENT_SECRET as string,
-  process.env.KEY_VAULT_KEY_IDENTIFIER as string,
-  process.env.KEY_VAULT_ALGORITHM as EncryptionAlgorithm,
-);
 
 // @ts-ignore
 keyVault[method](payload).then(console.log);
