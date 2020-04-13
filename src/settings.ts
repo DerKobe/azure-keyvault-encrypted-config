@@ -117,7 +117,7 @@ export const initKeyVault = (keyVaultAccessConfig: KeyVaultAccessConfig): KeyVau
   return new KeyVault(tenant, clientId, clientSecret, keyIdentifier, algorithm);
 };
 
-export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: KeyVaultAccessConfig, customLogger?: Logger, exceptionLogger?: ExceptionLogger, wait: boolean = false): void => {
+export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: KeyVaultAccessConfig, customLogger?: Logger, exceptionLogger?: ExceptionLogger, decryptInSequenceAndUseLocalCache: boolean = false): void => {
   config = configContent;
 
   const stringifyed = JSON.stringify(configContent);
@@ -151,7 +151,7 @@ export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: 
     return decryptedValue;
   };
 
-  if (wait) {
+  if (decryptInSequenceAndUseLocalCache) {
     semaphors.push(makeQuerablePromise(decryptObjectInSequence(decrypt, config)));
   } else {
     decryptObject(decrypt, config);
