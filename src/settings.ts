@@ -14,7 +14,7 @@ let hasDecryptionFinished = false;
 
 let logger: Logger;
 let storedLogMessages: any[] = [];
-const cache: {[key: string]: string} = {};
+const cache: { [key: string]: string } = {};
 
 function decryptObject(decrypt: CryptFunction, obj: any): void {
   for (const k in obj) {
@@ -72,16 +72,16 @@ async function decryptObjectInSequence(decrypt: CryptFunction, obj: any): Promis
           log(`akec: value for "${k}" found in cache`);
           obj[k.substring(0, k.length - POSTFIX_ENCRYPTED.length)] = cache[obj[k]];
         } else {
-            await decrypt(obj[k])
-              .then((val: string) => {
-                cache[obj[k]] = val;
-                obj[k.substring(0, k.length - POSTFIX_ENCRYPTED.length)] = val;
-                delete obj[k];
-                log(`akec: "${k}" decryption finished`);
-              })
-              .catch((error: any) => {
-                throw new DecryptionError(`Decryption failed: ${error.toString()} for ${k}`);
-              });
+          await decrypt(obj[k])
+            .then((val: string) => {
+              cache[obj[k]] = val;
+              obj[k.substring(0, k.length - POSTFIX_ENCRYPTED.length)] = val;
+              delete obj[k];
+              log(`akec: "${k}" decryption finished`);
+            })
+            .catch((error: any) => {
+              throw new DecryptionError(`Decryption failed: ${error.toString()} for ${k}`);
+            });
         }
 
       } else if (k.endsWith(POSTFIX_BIG_ENCRYPTED)) {
@@ -90,16 +90,16 @@ async function decryptObjectInSequence(decrypt: CryptFunction, obj: any): Promis
           log(`akec: value for "${k}" found in cache`);
           obj[k.substring(0, k.length - POSTFIX_BIG_ENCRYPTED.length)] = cache[obj[k]];
         } else {
-            await decrypt(obj[k], true)
-              .then((val: string) => {
-                cache[obj[k]] = val;
-                obj[k.substring(0, k.length - POSTFIX_BIG_ENCRYPTED.length)] = val;
-                delete obj[k];
-                log(`akec: "${k}" decryption finished`);
-              })
-              .catch((error: any) => {
-                throw new DecryptionError(`Decryption failed: ${error.toString()} for ${k}`);
-              });
+          await decrypt(obj[k], true)
+            .then((val: string) => {
+              cache[obj[k]] = val;
+              obj[k.substring(0, k.length - POSTFIX_BIG_ENCRYPTED.length)] = val;
+              delete obj[k];
+              log(`akec: "${k}" decryption finished`);
+            })
+            .catch((error: any) => {
+              throw new DecryptionError(`Decryption failed: ${error.toString()} for ${k}`);
+            });
         }
 
       } else if (k.endsWith(POSTFIX_BASE64)) {
@@ -117,7 +117,7 @@ export const initKeyVault = (keyVaultAccessConfig: KeyVaultAccessConfig): KeyVau
   return new KeyVault(tenant, clientId, clientSecret, keyIdentifier, algorithm);
 };
 
-export const initWithConfigContent = async (configContent: any, keyVaultAccessConfig: KeyVaultAccessConfig, customLogger?: Logger, exceptionLogger?: ExceptionLogger, wait: boolean = false): Promise<void> => {
+export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: KeyVaultAccessConfig, customLogger?: Logger, exceptionLogger?: ExceptionLogger, wait: boolean = false): void => {
   config = configContent;
 
   const stringifyed = JSON.stringify(configContent);
@@ -152,7 +152,7 @@ export const initWithConfigContent = async (configContent: any, keyVaultAccessCo
   };
 
   if (wait) {
-    await decryptObjectInSequence(decrypt, config);
+    semaphors.push(makeQuerablePromise(decryptObjectInSequence(decrypt, config)));
   } else {
     decryptObject(decrypt, config);
   }
