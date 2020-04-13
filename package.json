@@ -1,6 +1,6 @@
 {
   "name": "azure-keyvault-encrypted-config",
-  "version": "0.3.0",
+  "version": "0.5.0",
   "description": "Keep a json config file in your project which can contain encrypted secrets which will be decrypted via Azure KeyVault Key.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -37,7 +37,7 @@
   },
   "homepage": "https://github.com/DerKobe/azure-keyvault-enctypted-config#readme",
   "devDependencies": {
-    "@types/node": "^12.12.34",
+    "@types/node": "^12.12.35",
     "backend-tslint-rules": "1.14.0",
     "prettier": "^1.19.1",
     "tslint": "^5.20.1",
