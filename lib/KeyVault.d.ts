@@ -1,4 +1,4 @@
-import { EncryptionAlgorithm } from "@azure/keyvault-keys";
+import { EncryptionAlgorithm } from '@azure/keyvault-keys';
 import { Logger } from './types';
 export declare class KeyVault {
     private static localEncrypt;

@@ -1,7 +1,7 @@
-import { ClientSecretCredential } from "@azure/identity";
-import { CryptographyClient, EncryptionAlgorithm, KeyClient, KeyVaultKey } from "@azure/keyvault-keys";
+import { ClientSecretCredential } from '@azure/identity';
+import { CryptographyClient, EncryptionAlgorithm, KeyClient, KeyVaultKey } from '@azure/keyvault-keys';
 import * as crypto from 'crypto';
-import { Logger } from './types'
+import { Logger } from './types';
 
 const STORED_MESSAGES_MAX_LENGTH = 200;
 const CRYPTO_ALGORITHM = 'aes-256-cbc';
@@ -36,11 +36,25 @@ export class KeyVault {
   private logger?: Logger;
   private storedLogMessages: any[] = [];
 
-  constructor(tenant: string, clientId: string, clientSecret: string, keyIdentifier: string, algorithm?: EncryptionAlgorithm) {
-    if (!tenant) { throw new Error('KeyVault: tenant is missing!'); }
-    if (!clientId) { throw new Error('KeyVault: clientId is missing!'); }
-    if (!clientSecret) { throw new Error('KeyVault: clientSecret is missing!'); }
-    if (!keyIdentifier) { throw new Error('KeyVault: keyIdentifier is missing!'); }
+  constructor(
+    tenant: string,
+    clientId: string,
+    clientSecret: string,
+    keyIdentifier: string,
+    algorithm?: EncryptionAlgorithm,
+  ) {
+    if (!tenant) {
+      throw new Error('KeyVault: tenant is missing!');
+    }
+    if (!clientId) {
+      throw new Error('KeyVault: clientId is missing!');
+    }
+    if (!clientSecret) {
+      throw new Error('KeyVault: clientSecret is missing!');
+    }
+    if (!keyIdentifier) {
+      throw new Error('KeyVault: keyIdentifier is missing!');
+    }
 
     const match = keyIdentifier.match(new RegExp('(https://.+)/keys/(.+)/(.+)')) as string[];
 
@@ -96,20 +110,17 @@ export class KeyVault {
 
   private async call(method: 'encrypt' | 'decrypt', payload: string): Promise<string> {
     const buffer = Buffer.from(payload, method === 'decrypt' ? 'base64' : 'utf-8');
-
     const cryptographyClient = await this.getCryptographyClient();
 
-    return (
-      cryptographyClient[method](this.algorithm, buffer)
-        .then(({ result }) => {
-          this.log(`akec: KeyVault ${method} successfull`);
-          return (result as Buffer).toString(method === 'decrypt' ? 'utf-8' : 'base64')
-        })
-        .catch(e => {
-          this.log('akec: KeyVault (error)', e);
-          throw e;
-        })
-    );
+    return cryptographyClient[method](this.algorithm, buffer)
+      .then(({ result }) => {
+        this.log(`akec: KeyVault ${method} successfull`);
+        return (result as Buffer).toString(method === 'decrypt' ? 'utf-8' : 'base64');
+      })
+      .catch(e => {
+        this.log('akec: KeyVault (error)', e);
+        throw e;
+      });
   }
 
   private async getCryptographyClient(): Promise<CryptographyClient> {

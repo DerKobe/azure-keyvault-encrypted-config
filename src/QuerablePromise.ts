@@ -12,7 +12,9 @@ export interface QuerablePromise<T> extends Promise<T> {
  */
 export function makeQuerablePromise(promise: Promise<any>): QuerablePromise<any> {
   // Don't modify any promise that has been already modified.
-  if (promise.hasOwnProperty('isResolved')) { return promise as QuerablePromise<any>; }
+  if (promise.hasOwnProperty('isResolved')) {
+    return promise as QuerablePromise<any>;
+  }
 
   // Set initial state
   let isPending = true;
@@ -23,18 +25,18 @@ export function makeQuerablePromise(promise: Promise<any>): QuerablePromise<any>
   // Observe the promise, saving the fulfillment in a closure scope.
   // @ts-ignore
   const result: QuerablePromise<any> = promise.then(
-    (v) => {
+    v => {
       isResolved = true;
       isFulfilled = true;
       isPending = false;
       return v;
     },
-    (e) => {
+    e => {
       isResolved = true;
       isRejected = true;
       isPending = false;
       throw e;
-    }
+    },
   );
 
   result.isResolved = () => isResolved;

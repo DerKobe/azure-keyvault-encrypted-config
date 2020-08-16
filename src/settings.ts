@@ -1,7 +1,7 @@
 import { KeyVault } from './KeyVault';
 import { makeQuerablePromise, QuerablePromise } from './QuerablePromise';
-import { CryptFunction, KeyVaultAccessConfig } from './types'
-import { DecryptionError, ExceptionLogger, Logger } from "./types";
+import { CryptFunction, KeyVaultAccessConfig } from './types';
+import { DecryptionError, ExceptionLogger, Logger } from './types';
 
 const POSTFIX_ENCRYPTED = '-Encrypted';
 const POSTFIX_BIG_ENCRYPTED = '-BigEncrypted';
@@ -23,34 +23,28 @@ function decryptObject(decrypt: CryptFunction, obj: any): void {
     } else {
       if (k.endsWith(POSTFIX_ENCRYPTED)) {
         log(`akec: "${k}" needs to be decrypted`);
-        const promiseDecrypt = (
-          decrypt(obj[k])
-            .then((val: string) => {
-              obj[k.substring(0, k.length - POSTFIX_ENCRYPTED.length)] = val;
-              delete obj[k];
-              log(`akec: "${k}" decryption finished`);
-            })
-            .catch((error: any) => {
-              throw new DecryptionError(`Decryption failed: ${error.toString()} for ${k}`);
-            })
-        );
+        const promiseDecrypt = decrypt(obj[k])
+          .then((val: string) => {
+            obj[k.substring(0, k.length - POSTFIX_ENCRYPTED.length)] = val;
+            delete obj[k];
+            log(`akec: "${k}" decryption finished`);
+          })
+          .catch((error: any) => {
+            throw new DecryptionError(`Decryption failed: ${error.toString()} for ${k}`);
+          });
         semaphors.push(makeQuerablePromise(promiseDecrypt));
-
       } else if (k.endsWith(POSTFIX_BIG_ENCRYPTED)) {
         log(`akec: "${k}" needs to be decrypted locally because big payload`);
-        const promiseDecryptBig = (
-          decrypt(obj[k], true)
-            .then((val: string) => {
-              obj[k.substring(0, k.length - POSTFIX_BIG_ENCRYPTED.length)] = val;
-              delete obj[k];
-              log(`akec: "${k}" decryption finished`);
-            })
-            .catch((error: any) => {
-              throw new DecryptionError(`Decryption failed: ${error.toString()} for ${k}`);
-            })
-        );
+        const promiseDecryptBig = decrypt(obj[k], true)
+          .then((val: string) => {
+            obj[k.substring(0, k.length - POSTFIX_BIG_ENCRYPTED.length)] = val;
+            delete obj[k];
+            log(`akec: "${k}" decryption finished`);
+          })
+          .catch((error: any) => {
+            throw new DecryptionError(`Decryption failed: ${error.toString()} for ${k}`);
+          });
         semaphors.push(makeQuerablePromise(promiseDecryptBig));
-
       } else if (k.endsWith(POSTFIX_BASE64)) {
         log(`akec: "${k}" needs to be decoded`);
         obj[k.substring(0, k.length - POSTFIX_BASE64.length)] = Buffer.from(obj[k], 'base64').toString();
@@ -83,7 +77,6 @@ async function decryptObjectInSequence(decrypt: CryptFunction, obj: any): Promis
               throw new DecryptionError(`Decryption failed: ${error.toString()} for ${k}`);
             });
         }
-
       } else if (k.endsWith(POSTFIX_BIG_ENCRYPTED)) {
         log(`akec: "${k}" needs to be decrypted locally because big payload`);
         if (cache[obj[k]]) {
@@ -101,7 +94,6 @@ async function decryptObjectInSequence(decrypt: CryptFunction, obj: any): Promis
               throw new DecryptionError(`Decryption failed: ${error.toString()} for ${k}`);
             });
         }
-
       } else if (k.endsWith(POSTFIX_BASE64)) {
         log(`akec: "${k}" needs to be decoded`);
         obj[k.substring(0, k.length - POSTFIX_BASE64.length)] = Buffer.from(obj[k], 'base64').toString();
@@ -117,11 +109,21 @@ export const initKeyVault = (keyVaultAccessConfig: KeyVaultAccessConfig): KeyVau
   return new KeyVault(tenant, clientId, clientSecret, keyIdentifier, algorithm);
 };
 
-export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: KeyVaultAccessConfig, customLogger?: Logger, exceptionLogger?: ExceptionLogger, decryptInSequenceAndUseLocalCache: boolean = false): void => {
+export const initWithConfigContent = (
+  configContent: any,
+  keyVaultAccessConfig: KeyVaultAccessConfig,
+  customLogger?: Logger,
+  exceptionLogger?: ExceptionLogger,
+  decryptInSequenceAndUseLocalCache: boolean = false,
+): void => {
   config = configContent;
 
   const stringifyed = JSON.stringify(configContent);
-  if (stringifyed.indexOf(POSTFIX_ENCRYPTED) === -1 && stringifyed.indexOf(POSTFIX_BIG_ENCRYPTED) === -1 && stringifyed.indexOf(POSTFIX_BASE64) === -1) {
+  if (
+    stringifyed.indexOf(POSTFIX_ENCRYPTED) === -1 &&
+    stringifyed.indexOf(POSTFIX_BIG_ENCRYPTED) === -1 &&
+    stringifyed.indexOf(POSTFIX_BASE64) === -1
+  ) {
     return;
   }
 
@@ -160,7 +162,9 @@ export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: 
 
 export const getConfig = async () => {
   if (!hasDecryptionFinished) {
-    const openSemaphors = semaphors.map(s => s.isResolved()).reduce((count, isResolved) => count + (isResolved ? 0 : 1), 0);
+    const openSemaphors = semaphors
+      .map(s => s.isResolved())
+      .reduce((count, isResolved) => count + (isResolved ? 0 : 1), 0);
     log(`akec: getConfig -> open semaphors ${openSemaphors}/${semaphors.length}`);
     await Promise.all(semaphors).then(() => {
       hasDecryptionFinished = true;
@@ -172,7 +176,7 @@ export const getConfig = async () => {
 
 function log(...args: any[]): void {
   if (logger) {
-    logger(...args)
+    logger(...args);
   } else {
     storedLogMessages.push(args);
     if (storedLogMessages.length > STORED_MESSAGES_MAX_LENGTH) {

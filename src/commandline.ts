@@ -1,5 +1,5 @@
 #! /usr/bin/env node
-import { EncryptionAlgorithm } from "@azure/keyvault-keys";
+import { EncryptionAlgorithm } from '@azure/keyvault-keys';
 import { KeyVault } from './KeyVault';
 
 const method = process.argv[2];
@@ -14,7 +14,7 @@ if (!payload) {
   process.exit(2);
 }
 
-let keyVault
+let keyVault;
 try {
   keyVault = new KeyVault(
     process.env.KEY_VAULT_TENANT as string,
