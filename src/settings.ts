@@ -8,7 +8,7 @@ const POSTFIX_BIG_ENCRYPTED = '-BigEncrypted';
 const POSTFIX_BASE64 = '-Base64';
 const STORED_MESSAGES_MAX_LENGTH = 200;
 
-const semaphors: Array<QuerablePromise<void>> = [];
+const semaphors: QuerablePromise<void>[] = [];
 let config: any;
 let hasDecryptionFinished = false;
 
