@@ -1,4 +1,4 @@
-import { ClientSecretCredential } from '@azure/identity';
+import { ClientSecretCredential, DefaultAzureCredential, TokenCredential } from '@azure/identity';
 import { CryptographyClient, EncryptionAlgorithm, KeyClient, KeyVaultKey } from '@azure/keyvault-keys';
 import * as crypto from 'crypto';
 import { Logger } from './types';
@@ -23,50 +23,55 @@ export class KeyVault {
   }
 
   private readonly keysClient: KeyClient;
-  private readonly vaultBaseUri: string;
   private readonly keyName: string;
   private readonly keyVersion: string;
-  private readonly algorithm: EncryptionAlgorithm = 'RSA-OAEP';
-  private readonly tenant: string;
-  private readonly clientId: string;
-  private readonly clientSecret: string;
-  private readonly credentials: ClientSecretCredential;
+  private readonly credentials: TokenCredential;
+  private readonly algorithm: EncryptionAlgorithm;
+
   private key: KeyVaultKey | undefined;
   private cryptographyClientInstance: CryptographyClient | undefined;
   private logger?: Logger;
   private storedLogMessages: any[] = [];
 
-  constructor(
-    tenant: string,
-    clientId: string,
-    clientSecret: string,
-    keyIdentifier: string,
-    algorithm?: EncryptionAlgorithm,
-  ) {
-    if (!tenant) {
-      throw new Error('KeyVault: tenant is missing!');
-    }
-    if (!clientId) {
-      throw new Error('KeyVault: clientId is missing!');
-    }
-    if (!clientSecret) {
-      throw new Error('KeyVault: clientSecret is missing!');
-    }
-    if (!keyIdentifier) {
-      throw new Error('KeyVault: keyIdentifier is missing!');
+  constructor(...args: any[]) {
+    let keyIdentifier: string;
+
+    if (args.length === 2) {
+      keyIdentifier = args[0];
+      this.algorithm = args[1] || 'RSA-OAEP';
+      this.credentials = new DefaultAzureCredential();
+
+    } else if (args.length === 4 || args.length === 5) {
+      const tenant: string = args[0];
+      const clientId: string = args[1];
+      const clientSecret: string = args[2];
+      keyIdentifier = args[3];
+      this.algorithm = args[4] || 'RSA-OAEP';
+
+      if (!tenant) {
+        throw new Error('KeyVault: tenant is missing!');
+      }
+      if (!clientId) {
+        throw new Error('KeyVault: clientId is missing!');
+      }
+      if (!clientSecret) {
+        throw new Error('KeyVault: clientSecret is missing!');
+      }
+      if (!keyIdentifier) {
+        throw new Error('KeyVault: keyIdentifier is missing!');
+      }
+
+      this.credentials = new ClientSecretCredential(tenant, clientId, clientSecret);
+    } else {
+      throw new Error('Wrong number of parameters')
     }
 
     const match = keyIdentifier.match(new RegExp('(https://.+)/keys/(.+)/(.+)')) as string[];
-
-    this.tenant = tenant;
-    this.vaultBaseUri = match[1];
+    const vaultBaseUri = match[1];
     this.keyName = match[2];
     this.keyVersion = match[3];
-    this.algorithm = algorithm || this.algorithm;
-    this.clientId = clientId;
-    this.clientSecret = clientSecret;
-    this.credentials = new ClientSecretCredential(this.tenant, this.clientId, this.clientSecret);
-    this.keysClient = new KeyClient(this.vaultBaseUri, this.credentials);
+
+    this.keysClient = new KeyClient(vaultBaseUri, this.credentials);
   }
 
   public setLogger(logger: Logger): void {
