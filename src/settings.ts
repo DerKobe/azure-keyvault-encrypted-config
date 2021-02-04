@@ -104,18 +104,7 @@ async function decryptObjectInSequence(decrypt: CryptFunction, obj: any): Promis
   }
 }
 
-export const initKeyVault = (keyVaultAccessConfig: KeyVaultAccessConfig): KeyVault => {
-  const { tenant, clientId, clientSecret, keyIdentifier, algorithm } = keyVaultAccessConfig;
-  return new KeyVault(tenant, clientId, clientSecret, keyIdentifier, algorithm);
-};
-
-export const initWithConfigContent = (
-  configContent: any,
-  keyVaultAccessConfig: KeyVaultAccessConfig,
-  customLogger?: Logger,
-  exceptionLogger?: ExceptionLogger,
-  decryptInSequenceAndUseLocalCache: boolean = false,
-): void => {
+export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: KeyVaultAccessConfig, customLogger?: Logger, exceptionLogger?: ExceptionLogger, decryptInSequenceAndUseLocalCache: boolean = false): void => {
   config = configContent;
 
   const stringifyed = JSON.stringify(configContent);
@@ -131,9 +120,15 @@ export const initWithConfigContent = (
     setLogger(customLogger);
   }
 
-  const { tenant, clientId, clientSecret, keyIdentifier, algorithm } = keyVaultAccessConfig;
+  let keyVault: KeyVault;
 
-  const keyVault = new KeyVault(tenant, clientId, clientSecret, keyIdentifier, algorithm);
+  if (keyVaultAccessConfig.clientSecret) {
+    const { tenant, clientId, clientSecret, keyIdentifier, algorithm } = keyVaultAccessConfig;
+    keyVault = new KeyVault(tenant, clientId, clientSecret, keyIdentifier, algorithm);
+  } else {
+    const { keyIdentifier, algorithm } = keyVaultAccessConfig;
+    keyVault = new KeyVault(keyIdentifier, algorithm);
+  }
 
   if (customLogger) {
     keyVault.setLogger(customLogger);
@@ -160,6 +155,8 @@ export const initWithConfigContent = (
   }
 };
 
+export const init = initWithConfigContent
+
 export const getConfig = async () => {
   if (!hasDecryptionFinished) {
     const openSemaphors = semaphors
@@ -174,6 +171,13 @@ export const getConfig = async () => {
   return config;
 };
 
+export const setLogger = (customLogger: Logger) => {
+  customLogger('akec: custom logger set');
+  logger = customLogger;
+  storedLogMessages.forEach(msg => customLogger(msg));
+  storedLogMessages = [];
+};
+
 function log(...args: any[]): void {
   if (logger) {
     logger(...args);
@@ -184,10 +188,3 @@ function log(...args: any[]): void {
     }
   }
 }
-
-export const setLogger = (customLogger: Logger) => {
-  customLogger('akec: custom logger set');
-  logger = customLogger;
-  storedLogMessages.forEach(msg => customLogger(msg));
-  storedLogMessages = [];
-};

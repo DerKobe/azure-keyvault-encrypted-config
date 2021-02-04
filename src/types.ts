@@ -8,9 +8,9 @@ export type CryptFunction = (payload: string, big?: boolean) => Promise<string>;
 export class DecryptionError extends Error {}
 
 export interface KeyVaultAccessConfig {
-  tenant: string;
-  clientId: string;
-  clientSecret: string;
   keyIdentifier: string;
+  tenant?: string;
+  clientId?: string;
+  clientSecret?: string;
   algorithm?: EncryptionAlgorithm;
 }
