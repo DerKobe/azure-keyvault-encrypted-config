@@ -36,7 +36,7 @@ export class KeyVault {
   constructor(...args: any[]) {
     let keyIdentifier: string;
 
-    if (args.length === 1, args.length === 2) {
+    if (args.length === 1 || args.length === 2) {
       keyIdentifier = args[0];
       this.algorithm = args[1] || 'RSA-OAEP';
       this.credentials = new DefaultAzureCredential();
