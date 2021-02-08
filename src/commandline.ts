@@ -1,5 +1,4 @@
 #! /usr/bin/env node
-import { EncryptionAlgorithm } from '@azure/keyvault-keys';
 import { KeyVault } from './KeyVault';
 
 const method = process.argv[2];
