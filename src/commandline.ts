@@ -19,7 +19,7 @@ try {
   if (process.env.KEY_VAULT_CLIENT_ID) {
     config = [process.env.KEY_VAULT_TENANT, process.env.KEY_VAULT_CLIENT_ID, process.env.KEY_VAULT_CLIENT_SECRET, process.env.KEY_VAULT_KEY_IDENTIFIER];
   } else {
-    config = [process.env.KEY_VAULT_KEY_IDENTIFIER,];
+    config = [process.env.KEY_VAULT_KEY_IDENTIFIER];
   }
   if (process.env.KEY_VAULT_ALGORITHM) {
     config.push(process.env.KEY_VAULT_ALGORITHM);
