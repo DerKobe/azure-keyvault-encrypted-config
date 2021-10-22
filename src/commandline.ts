@@ -25,7 +25,7 @@ try {
     config.push(process.env.KEY_VAULT_ALGORITHM);
   }
   keyVault = new KeyVault(...config);
-} catch (e) {
+} catch (e: any) {
   console.error(e.message);
   process.exit(3);
 }

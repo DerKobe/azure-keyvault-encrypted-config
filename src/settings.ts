@@ -138,7 +138,7 @@ export const initWithConfigContent = (configContent: any, keyVaultAccessConfig: 
     let decryptedValue = '';
     try {
       decryptedValue = await keyVault[big ? 'decryptBig' : 'decrypt'](encryptedValue);
-    } catch (exception) {
+    } catch (exception: any) {
       if (exceptionLogger) {
         exceptionLogger(exception);
       } else {
